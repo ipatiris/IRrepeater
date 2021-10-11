@@ -1,26 +1,14 @@
-/*
-  Rui Santos
-  Complete project details at https://RandomNerdTutorials.com/esp-now-esp8266-nodemcu-arduino-ide/
-  
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files.
-  
-  The above copyright notice and this permission notice shall be included in all
-  copies or substantial portions of the Software.
-*/
-
 #include <ESP8266WiFi.h>
 #include <espnow.h>
-#include <IRsend.h>
 #include <Arduino.h>
 #include <IRrecv.h>
 #include <IRremoteESP8266.h>
 #include <IRutils.h>
-const uint16_t kIrLedPin = 4;
-const uint16_t kRecvPin = 13;
 
+//Pin with IR receiver connected
+const uint16_t kRecvPin = 13;
 const uint16_t kCaptureBufferSize = 1024;
-IRsend irsend(kIrLedPin);
+
 // kTimeout is the Nr. of milli-Seconds of no-more-data before we consider a
 // message ended.
 const uint8_t kTimeout = 50;  // Milli-Seconds
@@ -38,17 +26,12 @@ uint8_t broadcastAddress[] = {0x18, 0xFE, 0x34, 0xE1, 0x9D, 0x9B};
 // Structure example to send data
 // Must match the receiver structure
 typedef struct struct_message {
-  
   uint32_t b;
-  //uint16_t c;
-
 } struct_message;
 
 // Create a struct_message called myData
 struct_message myData;
 
-unsigned long lastTime = 0;  
-unsigned long timerDelay = 2000;  // send readings timer
 
 // Callback when data is sent
 void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus) {
@@ -64,12 +47,9 @@ void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus) {
 void setup() {
   // Init Serial Monitor
   Serial.begin(115200);
-
   irrecv.enableIRIn();  // Start up the IR receiver.
- 
   // Set device as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
-
   // Init ESP-NOW
   if (esp_now_init() != 0) {
     Serial.println("Error initializing ESP-NOW");
@@ -88,10 +68,11 @@ void setup() {
 void loop() {
 
  if (irrecv.decode(&results)) {  // We have captured something.
-
+    //Store captured data to variable k.  
     uint32_t k=results.value;
+    //Store data from variable k to structure data myData.
     myData.b=k;
-//    // Send message via ESP-NOW
+    // Send message via ESP-NOW
     esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(results));
     delay(50);
     irrecv.resume();
